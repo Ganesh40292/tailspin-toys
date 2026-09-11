@@ -12,6 +12,27 @@ Tailspin Toys is a crowdfunding platform for games with a developer theme. The p
 
 The database is migrated and seeded automatically before `dev`/`build` (via the `predev`/`prebuild` npm scripts) and is written to the gitignored `tailspin.db` file.
 
+## Implemented features
+
+- **Game catalog** — Displays the seeded collection of developer-themed games as responsive cards with titles, descriptions, category and publisher tags, star ratings, and links to detailed game pages.
+- **Game details** — Provides a dedicated static page for each game, including its description, publisher, category, rating, and support action. Unknown game IDs use the branded 404 page.
+- **Category and publisher filtering** — The home page provides accessible category checkboxes and a publisher dropdown. Multiple categories use OR matching; a selected publisher combines with categories using AND matching.
+- **Filter state and feedback** — Users can clear all selections, see the current result count, and receive an empty-results message when no game matches.
+- **Static-site interaction** — All games and filter options are rendered at build time. A small browser script filters the existing cards without a runtime API or client-side framework.
+- **Deterministic ratings** — Seeded ratings are derived deterministically from game titles so builds produce reproducible results.
+- **Responsive dark UI** — Reusable Astro components and Tailwind CSS utilities provide consistent dark-theme styling, responsive layouts, hover states, focus indicators, and accessible semantic controls.
+- **Database-backed build pipeline** — Drizzle ORM and Node.js SQLite manage publishers, categories, and games. Migrations and idempotent CSV seeding run automatically before development and production builds.
+- **Quality coverage** — Vitest covers transforms and data-access helpers; Playwright covers catalog, filtering, navigation, accessibility, detail pages, and 404 behavior; ESLint and TypeScript checks enforce code quality.
+
+### Filtering behavior
+
+Filtering is intentionally client-side because the application is fully prerendered:
+
+1. The build queries the database and renders all game cards.
+2. Category and publisher values are emitted as accessible controls and card metadata.
+3. Selecting a category or publisher hides non-matching cards and updates the live result count.
+4. The **Clear filters** control restores the complete catalog.
+
 ## Using this template
 
 This repository is a GitHub template. When you create a new repository from it, a one-time **Bootstrap template issues** workflow (`.github/workflows/bootstrap-issues.yml`) runs automatically on the first push to `main` and opens a set of starter issues describing suggested first features. Each issue is defined by a Markdown file in `.github/bootstrap-issues/` — the first heading becomes the issue title and the remaining content becomes the body — so you can edit, add, or remove files there to control which issues are created.
