@@ -39,5 +39,14 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
     },
+    rules: {
+      // Keep the TypeScript style consistent without requiring a separate formatter.
+      semi: ["error", "always"],
+      quotes: ["error", "single", { avoidEscape: true }],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { prefer: "type-imports", fixStyle: "separate-type-imports" },
+      ],
+    },
   },
 ];

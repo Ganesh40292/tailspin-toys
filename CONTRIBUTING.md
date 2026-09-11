@@ -61,10 +61,18 @@ Before you can run and test the application locally, you'll need to install:
 ### Frontend (Astro)
 
 - Build UI as `.astro` pages and components; query data in frontmatter (static output)
+- Document each reusable component's `Props` interface and public contract
 - Follow the dark theme using Tailwind CSS utility classes
 - Add `data-testid` attributes to interactive elements for testing
 - Run E2E tests before submitting: `npm run test:e2e`
    - All tests must pass
+
+### Comments and TypeScript style
+
+- Comments should explain why code exists, including intent, constraints, and non-obvious decisions; do not restate code.
+- Keep comments current with the implementation and remove stale comments.
+- Add TSDoc/JSDoc to every exported function in `db/` and `src/lib/`, covering its purpose, parameters, and return value.
+- Use explicit types, two-space indentation, single quotes, semicolons, and trailing commas in multiline TypeScript.
 
 ## Submitting a Pull Request
 
