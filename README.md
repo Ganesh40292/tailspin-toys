@@ -150,9 +150,10 @@ Users can filter the catalog using:
 - free-text title search
 - category selection
 - publisher selection
+- title and rating sorting
 - clearing all selections back to the complete list
 
-Filtering logic is applied in the browser over the content already rendered at build time, which keeps the static-site architecture intact.
+Filtering logic is applied in the browser over the content already rendered at build time, which keeps the static-site architecture intact. Search and filter state is synchronized to the URL, so a filtered catalog can be bookmarked or shared. Active selections are shown as removable chips, and an empty result state provides a direct reset action.
 
 ### Game detail pages
 

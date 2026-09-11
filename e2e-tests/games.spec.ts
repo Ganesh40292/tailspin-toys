@@ -98,6 +98,30 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should sort games by highest rating', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByLabel('Sort by').selectOption('rating-desc');
+
+    const visibleCards = page.locator('[data-testid="game-card"]:visible');
+    const ratings = await visibleCards.evaluateAll((cards) =>
+      cards.map((card) => Number(card.getAttribute('data-game-rating') ?? 0)),
+    );
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+    await expect(page).toHaveURL(/sort=rating-desc/);
+  });
+
+  test('should restore catalog state from shared URL filters', async ({ page }) => {
+    await page.goto('/?q=DOMINION&category=1&publisher=1&sort=rating-desc');
+
+    await expect(page.getByRole('searchbox', { name: 'Search games by title' })).toHaveValue('DOMINION');
+    await expect(page.getByLabel('Filter by publisher')).toHaveValue('1');
+    await expect(page.getByLabel('Sort by')).toHaveValue('rating-desc');
+    await expect(page.locator('[data-testid="game-card"]:visible').getByTestId('game-title')).toHaveText(
+      'DevOps Dominion',
+    );
+  });
+
   test('should clear active game filters', async ({ page }) => {
     await page.goto('/');
     const visibleGameCards = page.locator('[data-testid="game-card"]:visible');
