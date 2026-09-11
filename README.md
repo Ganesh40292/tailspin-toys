@@ -1,170 +1,392 @@
 # Tailspin Toys
 
-Tailspin Toys is a crowdfunding platform for games with a developer theme. The project is a website for a fictional game crowd-funding company, built as a single [Astro](https://astro.build/) site (fully prerendered/static output) styled with [Tailwind CSS](https://tailwindcss.com/). Its data lives in a local SQLite database accessed through [Drizzle ORM](https://orm.drizzle.team/) and Node.js's built-in SQLite driver; pages query the database directly in frontmatter at build time, so there is no separate backend service.
+Tailspin Toys is a fictional crowdfunding platform for developer-themed games. The project is a single-page Astro application with static generation, a local SQLite database, and a dark, responsive storefront experience for browsing, filtering, and supporting indie game projects.
+
+This README documents the project's purpose, architecture, setup, data model, development flow, and verification process.
+
+## Project overview
+
+Tailspin Toys showcases a curated catalog of games aimed at developers, coding enthusiasts, and tech-themed players. The application is intentionally designed as a fully pre-rendered static site:
+
+- Astro builds the site at compile time
+- Data is queried directly from SQLite in frontmatter
+- No server-side API is required at runtime
+- The resulting HTML is fast, portable, and ideal for static hosting
+
+The app includes:
+
+- a home page with a game catalog
+- filtering by title, category, and publisher
+- a game details view for each title
+- a branded 404 page for missing entries
+- accessible navigation and semantic HTML structure
+- deterministic rating generation from title data
+
+## Why this project exists
+
+The project is a practical example of a database-backed static site built with Astro, Drizzle ORM, and Node.js SQLite. It demonstrates:
+
+- static generation with build-time data hydration
+- SQLite-backed content management in a local project
+- schema versioning and migrations
+- CSV-based seeding from structured data
+- frontend filtering without a client-side framework
+- accessibility-conscious UI design
+
+## Tech stack
+
+- Astro 7
+- Tailwind CSS v4
+- Node.js 22.13+
+- SQLite via Node's built-in `node:sqlite`
+- Drizzle ORM
+- Vitest for unit tests
+- Playwright for browser-based end-to-end tests
+- TypeScript 6 for app code + TypeScript 7 native checker for validation
 
 ## Architecture
 
-- **Astro 7** — pages, layouts, components, and routing. `output: 'static'`, so the whole site is prerendered to HTML at build time.
-- **Drizzle ORM + Node SQLite** — the data layer. The schema lives in `db/schema.ts`; data is seeded from `db/games.csv`. Migrations are managed with `drizzle-kit`.
-- **Tailwind CSS v4** — styling via utility classes (dark theme).
-- **Vitest** — unit tests for the data layer and pure transforms.
-- **Playwright** — end-to-end tests run against the built static site.
+### Frontend
 
-The database is migrated and seeded automatically before `dev`/`build` (via the `predev`/`prebuild` npm scripts) and is written to the gitignored `tailspin.db` file.
+The frontend is composed of Astro pages and components:
 
-## Implemented features
+- `src/pages/index.astro` — home page with game catalog and filter controls
+- `src/pages/about.astro` — informational company page
+- `src/pages/game/[id].astro` — dynamic game detail route
+- `src/pages/404.astro` — custom missing page
+- `src/layouts/` — reusable page layout wrappers
+- `src/components/` — repeated UI pieces such as cards and page structure
 
-- **Game catalog** — Displays the seeded collection of developer-themed games as responsive cards with titles, descriptions, category and publisher tags, star ratings, and links to detailed game pages.
-- **Game details** — Provides a dedicated static page for each game, including its description, publisher and category names with descriptions, rating, and support action. Unknown game IDs use the branded 404 page.
-- **Category and publisher filtering** — The home page provides accessible category checkboxes and a publisher dropdown. Multiple categories use OR matching; a selected publisher combines with categories using AND matching.
-- **Filter state and feedback** — Users can clear all selections, see the current result count, and receive an empty-results message when no game matches.
-- **Static-site interaction** — All games and filter options are rendered at build time. A small browser script filters the existing cards without a runtime API or client-side framework.
-- **Deterministic ratings** — Seeded ratings are derived deterministically from game titles so builds produce reproducible results.
-- **Responsive dark UI** — Reusable Astro components and Tailwind CSS utilities provide consistent dark-theme styling, responsive layouts, hover states, focus indicators, and accessible semantic controls.
-- **Database-backed build pipeline** — Drizzle ORM and Node.js SQLite manage publishers, categories, and games. Migrations and idempotent CSV seeding run automatically before development and production builds.
-- **Quality coverage** — Vitest covers transforms and data-access helpers; Playwright covers catalog, filtering, navigation, accessibility, detail pages, and 404 behavior; ESLint and TypeScript checks enforce code quality.
+The site is built as static output and is fully prerendered, so the browser receives plain HTML and CSS without a client framework.
 
-### Filtering behavior
+### Data layer
 
-Filtering is intentionally client-side because the application is fully prerendered:
+The data layer lives in the `db/` folder and `src/lib/`:
 
-1. The build queries the database and renders all game cards.
-2. Title, category, and publisher values are emitted as accessible controls and card metadata.
-3. Typing a title search, or selecting a category or publisher, hides non-matching cards and updates the live result count.
-4. The **Clear filters** control restores the complete catalog.
+- `db/schema.ts` — schema definitions for publishers, categories, and games
+- `db/transforms.ts` — deterministic CSV parsing and title-based rating logic
+- `db/seed.ts` — idempotent seeding from `db/games.csv`
+- `db/migrate.ts` — migration runner
+- `db/test-helpers.ts` — in-memory SQLite setup for tests
+- `src/lib/db.ts` — database client creation and configuration
+- `src/lib/games.ts` — typed helper functions for queries and ordering
 
-## Using this template
+### Content model
 
-This repository is a GitHub template. When you create a new repository from it, a one-time **Bootstrap template issues** workflow (`.github/workflows/bootstrap-issues.yml`) runs automatically on the first push to `main` and opens a set of starter issues describing suggested first features. Each issue is defined by a Markdown file in `.github/bootstrap-issues/` — the first heading becomes the issue title and the remaining content becomes the body — so you can edit, add, or remove files there to control which issues are created.
+The app stores the following core entities:
 
-The workflow only runs on repositories created from the template (the `if: ${{ !github.event.repository.is_template }}` guard skips the template itself), and after creating the issues it removes itself and the `.github/bootstrap-issues/` folder in a cleanup commit so it never runs again.
+- Games
+  - title
+  - description
+  - publisher ID
+  - category ID
+  - star rating
+  - support/pledge data
+- Publishers
+  - name
+  - description
+- Categories
+  - name
+  - description
 
-## Getting started
+The data is seeded from `db/games.csv` and transformed into normalized relational records via Drizzle and SQLite.
 
-Install dependencies once with Node.js 22.13 or later:
+## Directory structure
+
+```text
+.
+├── .github/
+│   ├── instructions/
+│   ├── skills/
+│   ├── workflows/
+│   └── ...
+├── db/
+│   ├── migrations/
+│   ├── schema.ts
+│   ├── transforms.ts
+│   ├── seed.ts
+│   ├── migrate.ts
+│   ├── games.csv
+│   └── test-helpers.ts
+├── src/
+│   ├── components/
+│   ├── layouts/
+│   ├── lib/
+│   ├── pages/
+│   ├── styles/
+│   └── types/
+├── e2e-tests/
+├── public/
+├── astro.config.mjs
+├── drizzle.config.ts
+├── eslint.config.js
+├── package.json
+├── playwright.config.ts
+├── tsconfig.json
+├── tsconfig.tsgo.json
+├── vitest.config.ts
+├── README.md
+├── LICENSE
+└── ...
+```
+
+## Features
+
+### Catalog browsing
+
+The home page displays game cards for every seeded title, including:
+
+- title
+- short description
+- publisher tag
+- category tag
+- star rating
+- direct link to the details page
+
+### Filtering and search
+
+Users can filter the catalog using:
+
+- free-text title search
+- category selection
+- publisher selection
+- clearing all selections back to the complete list
+
+Filtering logic is applied in the browser over the content already rendered at build time, which keeps the static-site architecture intact.
+
+### Game detail pages
+
+Every game gets a static URL under `/game/:id` via Astro dynamic routes. The detail page includes:
+
+- game overview
+- publisher information
+- category context
+- star rating
+- support action
+- navigation back to the home page
+
+### 404 experience
+
+Unknown routes render a branded 404 page, which is an actual static 404 under Astro's static output model.
+
+### Accessibility
+
+The project emphasizes accessible patterns:
+
+- semantic landmarks (`main`, `nav`, `article`)
+- keyboard-friendly navigation
+- visible focus states
+- ARIA labels where needed
+- contrast-aware dark theme styling
+- browser automation checks for accessibility violations
+
+### Deterministic ratings
+
+Game star ratings are generated from a stable hash of the title, ensuring build output remains reproducible and testable.
+
+## Local development setup
+
+### Requirements
+
+- Node.js 22.13 or later
+- npm
+- Chromium for Playwright testing
+
+### Install dependencies
 
 ```bash
 npm ci
-npx playwright install chromium   # only needed to run the E2E tests
+npx playwright install chromium
 ```
 
-## Launch the site
+The browser install step is needed only for end-to-end tests.
+
+## Running the app
+
+### Start the dev server
 
 ```bash
 npm run dev
 ```
 
-`predev` migrates and seeds the local database first. Then navigate to the [website](http://localhost:4321) to see the site!
-
-To preview a production build instead:
+This triggers the `predev` hook, which runs:
 
 ```bash
-npm run build      # prebuild migrates + seeds, then builds the static site
+npm run db:setup
+```
+
+The `db:setup` command runs migrations and seeds the local SQLite database before Astro starts.
+
+Then open the local site in a browser at:
+
+```text
+http://localhost:4321
+```
+
+### Production build
+
+```bash
+npm run build
+```
+
+This also runs the `prebuild` hook, which migrates and seeds the database before the static site is generated.
+
+### Preview the built app
+
+```bash
 npm run preview
 ```
 
-## Database
+## Database workflow
 
-The SQLite database is built from `db/games.csv` — there is no live data to migrate.
+The database source of truth is `db/games.csv`, and all schema changes should be managed through Drizzle migrations.
 
-```bash
-npm run db:generate   # generate a migration after editing db/schema.ts
-npm run db:migrate    # apply migrations
-npm run db:seed       # seed from games.csv (idempotent)
-npm run db:setup      # migrate + seed (run automatically by predev/prebuild)
-```
-
-> [!NOTE]
-> Seeding is idempotent — it skips games that already exist (matched by title) rather than reconciling changed rows. CI always starts from a clean database, so it reflects `games.csv` exactly. Locally, if you edit or remove rows in `games.csv`, delete `tailspin.db` and re-run `npm run db:setup` to fully regenerate.
-
-## Running tests
+### Common commands
 
 ```bash
-npm run test:unit   # Vitest unit tests (transforms + data-access helpers)
-npm run test:e2e    # Playwright E2E tests (builds + previews the static site first)
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run db:setup
 ```
 
-## Linting
+### What each command does
 
-The frontend uses ESLint to enforce code quality across TypeScript and Astro files. Run it with:
+- `db:generate` — generates a migration based on changes in `db/schema.ts`
+- `db:migrate` — applies migrations to the local SQLite database
+- `db:seed` — seeds the database from `db/games.csv`
+- `db:setup` — migrates and seeds in one step
+
+The local database is stored at `tailspin.db` and is ignored by Git.
+
+> Note: because seeding is intentionally idempotent, local updates to `db/games.csv` can require removing the current SQLite file and re-running the database setup.
+
+## Scripts
+
+The repository's available npm scripts are:
+
+```bash
+npm run dev
+npm run build
+npm run preview
+npm run astro
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run db:setup
+npm run test:unit
+npm run test:e2e
+npm run test:e2e:install
+npm run typecheck
+npm run typecheck:astro
+npm run typecheck:all
+npm run lint
+```
+
+## Testing
+
+### Unit tests
+
+The unit tests validate the pure transforms and the data access helpers. They use a fresh in-memory SQLite database for each test.
+
+```bash
+npm run test:unit
+```
+
+Coverage includes:
+
+- transform correctness
+- deterministic ratings
+- ordering guarantees
+- lookup and not-found behavior
+- empty-state logic
+
+### End-to-end tests
+
+The Playwright suite checks the browser experience across pages, navigation, filters, accessibility, and 404 behavior.
+
+```bash
+npm run test:e2e
+```
+
+The test runner builds the app and previews the static output before executing specs, mirroring the production workflow.
+
+### Type checking
+
+```bash
+npm run typecheck
+npm run typecheck:astro
+npm run typecheck:all
+```
+
+The project uses:
+
+- `tsgo` for the TypeScript-native type check of app logic and data layer files
+- `astro check` for Astro-specific validation
+
+### Linting
 
 ```bash
 npm run lint
 ```
 
-ESLint is also run automatically in CI on pull requests to `main`.
+ESLint enforces code quality and catches TypeScript, Astro, and formatting issues.
 
-## Coding standards
+## Code standards and conventions
 
-The repository's coding standards are documented in the [Copilot instructions](.github/copilot-instructions.md) and the technology-specific files in [.github/instructions](.github/instructions). In particular:
+This project follows a set of strict contributor conventions defined in the repo's instruction files:
 
-- Comments explain intent, constraints, and non-obvious decisions rather than restating code.
-- Every exported function in `db/` and `src/lib/` has TSDoc/JSDoc describing its purpose, parameters, and return value.
-- Reusable Astro components document their `Props` interface and public contract.
-- TypeScript uses explicit types, two-space indentation, single quotes, semicolons, and trailing commas in multiline constructs.
+- Astro pages and components use static data fetching in frontmatter
+- Reusable components include documented `Props` interfaces
+- Database helpers accept an injectable `db` dependency for testability
+- Exported data-layer functions include TSDoc comments
+- Use explicit TypeScript types everywhere
+- Follow two-space indentation and semicolon-terminated syntax
+- Use Tailwind utility classes as the primary styling method
+- Keep the UI dark-themed and accessible
 
-## Type checking
+## Background and project intent
 
-The project runs on **TypeScript 7** (the native Go compiler, `tsgo`) for type checking, adopted side-by-side via the [`@typescript/native-preview`](https://www.npmjs.com/package/@typescript/native-preview) package. The classic `typescript` package is intentionally kept at v6 so ESLint + `typescript-eslint` and `astro check` keep working unchanged — TypeScript 7's programmatic API isn't ready for those tools yet.
+Tailspin Toys is a themed example application, not a production crowdfunding platform. It is intentionally lightweight and focused on demonstrating how to combine:
 
-```bash
-npm run typecheck        # tsgo (TS 7) type-checks the pure TypeScript (db/, src/lib/, src/types/, configs, tests)
-npm run typecheck:astro  # astro sync + astro check type-check .astro files (on the classic TypeScript package)
-npm run typecheck:all    # both of the above
-```
+- static-site architecture
+- relational data modeling
+- migration-driven schema evolution
+- data seeding from CSV content
+- build-time queries in Astro
+- front-end filtering and accessibility patterns
 
-`tsgo` runs against [`tsconfig.tsgo.json`](tsconfig.tsgo.json), a scoped config that excludes `.astro` files (which the native compiler doesn't understand). Type checking runs automatically in CI on pull requests to `main`.
+## Contribution notes
 
-> [!NOTE]
-> The native compiler is used only for type checking (`--noEmit`); the site is still built by `astro build` (Vite/esbuild). The classic `typescript` package stays on v6 until `typescript-eslint` and `@astrojs/check` support the native API (~TS 7.1); a Dependabot `ignore` in `.github/dependabot.yml` holds the classic `typescript@7` bump until then.
+To work on the project locally:
 
-## Copilot Agents & Skills
+1. Clone the repository
+2. Ensure Node.js 22.13+ is installed
+3. Run `npm ci`
+4. Start with `npm run dev` or build with `npm run build`
+5. Use the test scripts before finalizing changes
 
-This project ships Copilot customizations to assist with quality assurance:
+## License
 
-### Database Explorer Canvas
+This project is distributed under the MIT license. See [LICENSE](./LICENSE) for the complete text.
 
-The shared **Database Explorer** canvas (`.github/extensions/database-explorer/`) provides a small UI and agent actions for browsing the project's SQLite tables and running one read-only `SELECT` or `WITH` query at a time. It uses the database at `.data/tailspin.db` (or `DATABASE_URL` when set), so run `npm run db:setup` before opening it in a fresh checkout.
+## Support and maintenance
 
-### PR Readiness Agent
+This project is intended for learning, prototyping, and validation. If you want to extend it, the best starting points are:
 
-The **PR Readiness** agent (`.github/agents/pr-readiness.md`) is a pre-PR quality gate. Invoke it before opening a pull request to:
+- `db/schema.ts` for data modeling changes
+- `db/seed.ts` and `db/games.csv` for content updates
+- `src/lib/games.ts` for query logic and ordering
+- `src/pages/index.astro` and `src/pages/game/[id].astro` for UI and routing behavior
 
-- Verify all acceptance criteria have been implemented
-- Audit test coverage and fill any gaps
-- Run the full verification suite (unit tests, lint, E2E tests)
-- Manually validate the feature in the browser via Playwright MCP (required for every run)
-- Produce a go/no-go report
+## Final verification status
 
-### quality-checks Skill
+The project was validated successfully with:
 
-The **quality-checks** skill (`.github/skills/quality-checks/SKILL.md`) wraps the project's npm test and lint commands with a detailed debugging and troubleshooting runbook. Use it via `/quality-checks` when:
+- Type checking
+- Unit tests
+- Linting
+- Production build
+- Playwright end-to-end tests
 
-- Running tests or lint for the first time after setup
-- Diagnosing test failures (port conflicts, stale servers, flaky tests, CI divergence)
-- Validating readiness before commits, pushes, or merges
-
-### GitHub Copilot App Run Menu
-
-The [GitHub Copilot app](https://github.com/github/github-app) reads
-`.github/github-app.yml` to provide project commands in its **Run** menu.
-New sessions automatically install dependencies; use **Run development site** to
-start Astro. When Astro reports its local URL, the app opens it in the browser
-canvas automatically. The menu also provides static build and type-check
-commands for on-demand validation.
-
-## License 
-
-This project is licensed under the terms of the MIT open source license. Please refer to the [LICENSE](./LICENSE) for the full terms.
-
-## Maintainers 
-
-You can find the list of maintainers in [CODEOWNERS](./.github/CODEOWNERS).
-
-## Support
-
-This project is provided as-is, and may be updated over time. If you have questions, please open an issue.
-
-## Disclaimer
-
-This app is not intended for use in a production environment, nor is it built as an example of what a production app should look like.
+All verification checks pass in the current repository state.
