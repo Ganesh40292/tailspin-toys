@@ -9,6 +9,20 @@ import { getAllGames } from '../lib/games';
 export const prerender = true;
 
 const games = await getAllGames(getDatabase());
+const categoryOptions = new Map<number, string>();
+const publisherOptions = new Map<number, string>();
+
+for (const game of games) {
+  if (game.category !== null) {
+    categoryOptions.set(game.category.id, game.category.name);
+  }
+  if (game.publisher !== null) {
+    publisherOptions.set(game.publisher.id, game.publisher.name);
+  }
+}
+
+const categories = [...categoryOptions.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCompare(b[1]));
 ---
 
 <Layout title="Tailspin Toys - Crowdfunding your new favorite game!">
@@ -24,10 +38,117 @@ const games = await getAllGames(getDatabase());
       {games.length === 0 ? (
         <EmptyState text="No games available at the moment." />
       ) : (
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
-          {games.map((game) => <GameCard game={game} />)}
-        </div>
+        <>
+          <form
+            id="game-filters"
+            class="mb-8 rounded-xl border border-slate-700 bg-slate-800/60 p-6"
+            data-testid="game-filters"
+          >
+            <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <fieldset>
+                <legend class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
+                  Filter by category
+                </legend>
+                <div class="flex flex-wrap gap-3">
+                  {categories.map(([id, name]) => (
+                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-3 py-2 text-slate-200 transition-colors hover:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500">
+                      <input
+                        type="checkbox"
+                        name="category"
+                        value={id}
+                        aria-label={name}
+                        class="h-4 w-4 accent-blue-500"
+                        data-testid={`category-filter-${id}`}
+                      />
+                      <span>{name}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+
+              <div class="flex flex-col gap-2">
+                <label for="publisher-filter" class="text-sm font-semibold uppercase tracking-wide text-slate-300">
+                  Filter by publisher
+                </label>
+                <select
+                  id="publisher-filter"
+                  name="publisher"
+                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  data-testid="publisher-filter"
+                >
+                  <option value="">All publishers</option>
+                  {publishers.map(([id, name]) => <option value={id}>{name}</option>)}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                data-testid="clear-filters"
+              >
+                Clear filters
+              </button>
+            </div>
+            <p class="mt-4 text-sm text-slate-400" role="status" aria-live="polite" data-testid="filter-status">
+              Showing {games.length} {games.length === 1 ? 'game' : 'games'}
+            </p>
+          </form>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="games-grid">
+            {games.map((game) => <GameCard game={game} />)}
+          </div>
+          <p class="hidden py-8 text-center text-slate-400" data-testid="filtered-empty" role="status">
+            No games match the selected filters.
+          </p>
+        </>
       )}
     </div>
   </div>
 </Layout>
+
+<script>
+  const filterForm = document.querySelector<HTMLFormElement>('[data-testid="game-filters"]');
+  const gamesGrid = document.querySelector<HTMLElement>('[data-testid="games-grid"]');
+  const filterStatus = document.querySelector<HTMLElement>('[data-testid="filter-status"]');
+  const filteredEmpty = document.querySelector<HTMLElement>('[data-testid="filtered-empty"]');
+  const clearFilters = document.querySelector<HTMLButtonElement>('[data-testid="clear-filters"]');
+
+  if (filterForm && gamesGrid && filterStatus && filteredEmpty && clearFilters) {
+    const gameCards = Array.from(gamesGrid.querySelectorAll<HTMLElement>('[data-testid="game-card"]'));
+    const categoryFilters = Array.from(
+      filterForm.querySelectorAll<HTMLInputElement>('input[name="category"]'),
+    );
+    const publisherFilter = filterForm.querySelector<HTMLSelectElement>('select[name="publisher"]');
+
+    const applyFilters = (): void => {
+      const selectedCategories = new Set(
+        categoryFilters.filter((filter) => filter.checked).map((filter) => filter.value),
+      );
+      const selectedPublisher = publisherFilter?.value ?? '';
+      let visibleGames = 0;
+
+      gameCards.forEach((card) => {
+        const categoryMatches =
+          selectedCategories.size === 0 ||
+          selectedCategories.has(card.dataset.categoryId ?? '');
+        const publisherMatches =
+          selectedPublisher === '' || selectedPublisher === (card.dataset.publisherId ?? '');
+        const visible = categoryMatches && publisherMatches;
+
+        card.hidden = !visible;
+        if (visible) {
+          visibleGames += 1;
+        }
+      });
+
+      filterStatus.textContent = `Showing ${visibleGames} ${visibleGames === 1 ? 'game' : 'games'}`;
+      filteredEmpty.classList.toggle('hidden', visibleGames !== 0);
+    };
+
+    filterForm.addEventListener('change', applyFilters);
+    clearFilters.addEventListener('click', () => {
+      filterForm.reset();
+      applyFilters();
+    });
+  }
+</script>
