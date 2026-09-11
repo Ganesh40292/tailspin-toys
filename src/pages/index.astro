@@ -45,6 +45,20 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
             data-testid="game-filters"
           >
             <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div class="flex flex-col gap-2">
+                <label for="title-search" class="text-sm font-semibold uppercase tracking-wide text-slate-300">
+                  Search games by title
+                </label>
+                <input
+                  id="title-search"
+                  name="title"
+                  type="search"
+                  placeholder="Search by title"
+                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  data-testid="title-search"
+                />
+              </div>
+
               <fieldset>
                 <legend class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-300">
                   Filter by category
@@ -98,7 +112,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
             {games.map((game) => <GameCard game={game} />)}
           </div>
           <p class="hidden py-8 text-center text-slate-400" data-testid="filtered-empty" role="status">
-            No games match the selected filters.
+            No games match your search or filters.
           </p>
         </>
       )}
@@ -118,22 +132,27 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
     const categoryFilters = Array.from(
       filterForm.querySelectorAll<HTMLInputElement>('input[name="category"]'),
     );
+    const titleSearch = filterForm.querySelector<HTMLInputElement>('input[name="title"]');
     const publisherFilter = filterForm.querySelector<HTMLSelectElement>('select[name="publisher"]');
 
     const applyFilters = (): void => {
       const selectedCategories = new Set(
         categoryFilters.filter((filter) => filter.checked).map((filter) => filter.value),
       );
+      const searchQuery = titleSearch?.value.trim().toLowerCase() ?? '';
       const selectedPublisher = publisherFilter?.value ?? '';
       let visibleGames = 0;
 
       gameCards.forEach((card) => {
+        const titleMatches =
+          searchQuery === '' ||
+          (card.dataset.gameTitle ?? '').toLowerCase().includes(searchQuery);
         const categoryMatches =
           selectedCategories.size === 0 ||
           selectedCategories.has(card.dataset.categoryId ?? '');
         const publisherMatches =
           selectedPublisher === '' || selectedPublisher === (card.dataset.publisherId ?? '');
-        const visible = categoryMatches && publisherMatches;
+        const visible = titleMatches && categoryMatches && publisherMatches;
 
         card.hidden = !visible;
         if (visible) {
@@ -146,6 +165,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
     };
 
     filterForm.addEventListener('change', applyFilters);
+    titleSearch?.addEventListener('input', applyFilters);
     clearFilters.addEventListener('click', () => {
       filterForm.reset();
       applyFilters();

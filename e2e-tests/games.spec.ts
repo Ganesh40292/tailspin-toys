@@ -44,6 +44,44 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should search games by title case-insensitively', async ({ page }) => {
+    await page.goto('/');
+
+    await test.step('Enter a partial title search', async () => {
+      await page.getByRole('searchbox', { name: 'Search games by title' }).fill('DOMINION');
+    });
+
+    await test.step('Verify matching title is shown', async () => {
+      const visibleGameCards = page.locator('[data-testid="game-card"]:visible');
+      await expect(page.getByTestId('filter-status')).toHaveText('Showing 1 game');
+      await expect(visibleGameCards).toHaveCount(1);
+      await expect(visibleGameCards.getByTestId('game-title')).toHaveText('DevOps Dominion');
+    });
+  });
+
+  test('should combine title search with category and publisher filters', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('searchbox', { name: 'Search games by title' }).fill('devops');
+    await page.getByRole('checkbox', { name: 'Strategy' }).check();
+    await page.getByLabel('Filter by publisher').selectOption({ label: 'CodeForge Studios' });
+
+    await expect(page.getByTestId('filter-status')).toHaveText('Showing 1 game');
+    await expect(page.locator('[data-testid="game-card"]:visible').getByTestId('game-title')).toHaveText(
+      'DevOps Dominion',
+    );
+  });
+
+  test('should show an empty state when no title matches', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('searchbox', { name: 'Search games by title' }).fill('not a real game');
+
+    await expect(page.getByTestId('filter-status')).toHaveText('Showing 0 games');
+    await expect(page.getByTestId('filtered-empty')).toHaveText('No games match your search or filters.');
+    await expect(page.locator('[data-testid="game-card"]:visible')).toHaveCount(0);
+  });
+
   test('should combine category and publisher filters', async ({ page }) => {
     await page.goto('/');
 
@@ -65,8 +103,11 @@ test.describe('Game Listing and Navigation', () => {
     const visibleGameCards = page.locator('[data-testid="game-card"]:visible');
     const allGamesCount = await visibleGameCards.count();
 
+    await page.getByRole('searchbox', { name: 'Search games by title' }).fill('devops');
+    await expect(visibleGameCards).toHaveCount(1);
+
     await page.getByRole('checkbox', { name: 'Strategy' }).check();
-    await expect(visibleGameCards).toHaveCount(4);
+    await expect(visibleGameCards).toHaveCount(1);
 
     await page.getByTestId('clear-filters').click();
     await expect(page.getByTestId('filter-status')).toHaveText(`Showing ${allGamesCount} games`);
