@@ -1,7 +1,8 @@
 import { createServer } from "node:http";
+import { DatabaseSync } from "node:sqlite";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { createClient } from "@libsql/client";
 import { CanvasError, createCanvas, joinSession } from "@github/copilot-sdk/extension";
 
 const servers = new Map();
@@ -10,6 +11,12 @@ const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".."
 
 function databaseUrl() {
     return process.env.DATABASE_URL ?? `file:${join(PROJECT_ROOT, ".data", "tailspin.db")}`;
+}
+
+function databasePathFromUrl(url) {
+    return url.startsWith("file:")
+        ? (url.startsWith("file:///") ? fileURLToPath(url) : url.slice("file:".length))
+        : url;
 }
 
 function readRequestBody(request) {
@@ -113,20 +120,26 @@ function normalizeValue(value) {
 }
 
 async function executeQuery(url, query) {
-    const client = createClient({ url });
+    const databasePath = databasePathFromUrl(url);
+    const database = new DatabaseSync(databasePath, { readOnly: true });
     try {
-        const result = await client.execute(query);
-        const columns = result.columns;
-        const rows = result.rows.slice(0, MAX_DISPLAY_ROWS).map((row) =>
+        const statement = database.prepare(query);
+        const columns = statement.columns().map((column) => column.name);
+        const allRows = statement.all();
+        const rows = allRows.slice(0, MAX_DISPLAY_ROWS).map((row) =>
             Object.fromEntries(columns.map((column) => [column, normalizeValue(row[column])])),
         );
-        return { columns, rows, truncated: result.rows.length > MAX_DISPLAY_ROWS };
+        return { columns, rows, truncated: allRows.length > MAX_DISPLAY_ROWS };
     } finally {
-        client.close();
+        database.close();
     }
 }
 
 async function listTables(url) {
+    if (!existsSync(databasePathFromUrl(url))) {
+        return { columns: ["name", "type"], rows: [], truncated: false };
+    }
+
     return executeQuery(
         url,
         "SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY type, name",
