@@ -221,6 +221,21 @@ test.describe('Game Listing and Navigation', () => {
       await expect(backButton).toContainText('Support This Game');
       await expect(backButton).toBeEnabled();
     });
+
+  });
+
+  test('should support a validated simulated pledge flow', async ({ page }) => {
+    await page.goto('/game/1');
+    await expect(page.getByRole('heading', { name: 'Pledge tiers' })).toBeVisible();
+    await expect(page.getByTestId('pledge-tier-founder')).toContainText('Founder');
+    await page.getByTestId('pledge-submit').click();
+    await expect(page.getByTestId('pledge-error')).toContainText('valid email');
+    await page.getByTestId('pledge-name').fill('Taylor Tester');
+    await page.getByTestId('pledge-email').fill('taylor@example.com');
+    await page.getByTestId('pledge-tier').selectOption('Founder');
+    await page.getByTestId('pledge-submit').click();
+    await expect(page).toHaveURL(/\/pledge\/confirmation\?name=Taylor\+Tester&email=taylor%40example.com&tier=Founder/);
+    await expect(page.getByTestId('confirmation-heading')).toContainText('Thanks for backing');
   });
 
   test('should be able to navigate back to home from game details', async ({ page }) => {

@@ -18,6 +18,7 @@ The app includes:
 - a home page with a game catalog
 - filtering by title, category, and publisher
 - a game details view for each title
+- static crowdfunding campaign details with reward tiers, updates, FAQs, and a simulated pledge confirmation
 - a branded 404 page for missing entries
 - accessible navigation and semantic HTML structure
 - deterministic rating generation from title data
@@ -81,7 +82,6 @@ The app stores the following core entities:
   - publisher ID
   - category ID
   - star rating
-  - support/pledge data
 - Publishers
   - name
   - description
@@ -163,7 +163,10 @@ Every game gets a static URL under `/game/:id` via Astro dynamic routes. The det
 - publisher information
 - category context
 - star rating
-- support action
+- campaign funding progress, stretch goals, and recent supporter activity
+- Supporter, Collector, and Founder reward tiers
+- developer profile, updates, community discussion, FAQ, and risk transparency
+- a client-validated simulated pledge form (no payment integration) and confirmation route
 - navigation back to the home page
 
 ### 404 experience

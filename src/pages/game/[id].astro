@@ -6,87 +6,125 @@ import Tag from '../../components/Tag.astro';
 import Card from '../../components/Card.astro';
 import Button from '../../components/Button.astro';
 import ArrowLeft from '../../assets/icons/arrow-left.svg';
-import Heart from '../../assets/icons/heart.svg';
 import { getDatabase } from '../../lib/db';
 import { getAllGameIds, getGameById } from '../../lib/games';
+import { getCampaign } from '../../lib/campaigns';
 
 export const prerender = true;
-
 export const getStaticPaths = (async () => {
-    const ids = await getAllGameIds(getDatabase());
-    return ids.map((id) => ({ params: { id: String(id) } }));
+  const ids = await getAllGameIds(getDatabase());
+  return ids.map((id) => ({ params: { id: String(id) } }));
 }) satisfies GetStaticPaths;
 
-const { id } = Astro.params;
-const game = await getGameById(getDatabase(), Number(id));
-
-if (!game) {
-    return Astro.redirect('/404');
-}
+const game = await getGameById(getDatabase(), Number(Astro.params.id));
+if (!game) return Astro.redirect('/404');
+const campaign = getCampaign(game);
+const progress = Math.min(100, Math.round((campaign.raised / campaign.goal) * 100));
 ---
 
-<Layout title="Game Details - Tailspin Toys">
-  <div>
-    <Card class="overflow-hidden" data-testid="game-details">
+<Layout title={`${game.title} Campaign - Tailspin Toys`}>
+  <div class="space-y-8" data-testid="game-details">
+    <Card class="overflow-hidden">
       <div class="p-6 sm:p-8 lg:p-10">
-        <div class="flex justify-between items-start flex-wrap gap-3">
+        <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Game spotlight</p>
+            <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">Live campaign</p>
             <h1 class="text-3xl font-bold tracking-tight text-white sm:text-4xl" data-testid="game-details-title">{game.title}</h1>
+            <div class="mt-4 flex flex-wrap gap-2">
+              {game.category && <Tag color="blue" data-testid="game-details-category">{game.category.name}</Tag>}
+              {game.publisher && <Tag color="purple" data-testid="game-details-publisher">{game.publisher.name}</Tag>}
+            </div>
+            <div class="mt-6 grid gap-4 md:grid-cols-2">
+              {game.category?.description && <section class="rounded-xl border border-slate-800 bg-slate-950/70 p-5" data-testid="game-details-category-description"><h2 class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Category</h2><p class="mt-3 leading-6 text-slate-300">{game.category.description}</p></section>}
+              {game.publisher?.description && <section class="rounded-xl border border-slate-800 bg-slate-950/70 p-5" data-testid="game-details-publisher-description"><h2 class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Publisher</h2><p class="mt-3 leading-6 text-slate-300">{game.publisher.description}</p></section>}
+            </div>
           </div>
-
           <StarRating rating={game.starRating} />
         </div>
-
-        <div class="mt-6 mb-8 flex flex-wrap gap-2">
-          {game.category && (
-            <Tag color="blue" data-testid="game-details-category">
-              {game.category.name}
-            </Tag>
-          )}
-          {game.publisher && (
-            <Tag color="purple" data-testid="game-details-publisher">
-              {game.publisher.name}
-            </Tag>
-          )}
-        </div>
-
-        <div class="mb-8 grid gap-4 md:grid-cols-2">
-          {game.category?.description && (
-            <section class="rounded-xl border border-slate-800 bg-slate-950/70 p-5" data-testid="game-details-category-description">
-              <h2 class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Category</h2>
-              <p class="mt-3 leading-6 text-slate-300">{game.category.description}</p>
-            </section>
-          )}
-          {game.publisher?.description && (
-            <section class="rounded-xl border border-slate-800 bg-slate-950/70 p-5" data-testid="game-details-publisher-description">
-              <h2 class="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Publisher</h2>
-              <p class="mt-3 leading-6 text-slate-300">{game.publisher.description}</p>
-            </section>
-          )}
-        </div>
-
-        <div class="space-y-4 mt-6">
-          <h2 class="mb-2 text-xl font-bold text-white">About this game</h2>
-          <div class="space-y-4 leading-7 text-slate-400">
-            <p data-testid="game-details-description">{game.description}</p>
+        <div class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+          <div>
+            <p class="leading-7 text-slate-300" data-testid="game-details-description">{game.description}</p>
+            <div class="mt-6 h-3 overflow-hidden rounded-full bg-slate-800" aria-label={`${progress}% funded`} role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
+              <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500" style={`width: ${progress}%`}></div>
+            </div>
+            <div class="mt-3 flex justify-between text-sm text-slate-400">
+              <span><strong class="text-white">${campaign.raised.toLocaleString()}</strong> raised</span>
+              <span>{progress}% of ${campaign.goal.toLocaleString()} goal</span>
+            </div>
           </div>
-        </div>
-
-        <div class="mt-8">
-          <Button variant="gradient" fullWidth data-testid="back-game-button">
-            <Heart class="h-5 w-5 mr-2" aria-hidden="true" />
-            Support This Game
-          </Button>
+          <div class="rounded-xl border border-slate-700 bg-slate-950/70 p-5">
+            <p class="text-3xl font-bold text-white">{campaign.backers}</p>
+            <p class="text-sm text-slate-400">backers so far</p>
+            <p class="mt-4 text-sm text-slate-300">Estimated delivery: <strong class="text-white">{campaign.delivery}</strong></p>
+            <a href="#pledge" data-testid="back-game-button" class="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 font-semibold text-white transition-all hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-blue-400">Support This Game</a>
+          </div>
         </div>
       </div>
     </Card>
 
-    <div class="mt-8">
-      <Button href="/" size="sm">
-        <ArrowLeft class="h-5 w-5 mr-2" aria-hidden="true" />
-        Back to all games
-      </Button>
+    <section aria-labelledby="rewards-heading">
+      <div class="mb-4 flex items-end justify-between"><div><p class="text-sm font-semibold uppercase tracking-[0.16em] text-blue-400">Choose your reward</p><h2 id="rewards-heading" class="mt-1 text-2xl font-bold text-white">Pledge tiers</h2></div><span class="text-sm text-slate-400">No payment required</span></div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        {campaign.tiers.map((tier) => (
+          <Card as="article" class="flex flex-col p-6" data-testid={`pledge-tier-${tier.name.toLowerCase()}`}>
+            <div class="flex items-start justify-between gap-2"><h3 class="text-xl font-bold text-white">{tier.name}</h3><span class="text-2xl font-bold text-blue-300">${tier.price}</span></div>
+            <p class="mt-2 text-sm text-slate-400">{tier.availability}</p>
+            <ul class="mt-5 flex-1 space-y-2 text-sm text-slate-300">{tier.benefits.map((benefit) => <li>✓ {benefit}</li>)}</ul>
+            <a href="#pledge" data-testid={`select-tier-${tier.name.toLowerCase()}`} class="mt-6 inline-flex justify-center rounded-xl border border-blue-400/50 px-4 py-2 font-semibold text-blue-200 transition hover:bg-blue-500/10 focus:outline-none focus:ring-2 focus:ring-blue-400">Select {tier.name}</a>
+          </Card>
+        ))}
+      </div>
+    </section>
+
+    <div class="grid gap-8 lg:grid-cols-2">
+      <Card as="section" class="p-6" aria-labelledby="stretch-heading">
+        <h2 id="stretch-heading" class="text-xl font-bold text-white">Stretch goals</h2>
+        <ul class="mt-4 space-y-3 text-slate-300">{campaign.stretchGoals.map((goal) => <li class="rounded-lg border border-slate-700 bg-slate-950/60 p-3">{goal}</li>)}</ul>
+        <h3 class="mt-6 text-sm font-semibold uppercase tracking-[0.15em] text-slate-400">Recent supporters</h3>
+        <div class="mt-3 flex flex-wrap gap-2">{campaign.recentSupporters.map((supporter) => <span class="rounded-full bg-slate-800 px-3 py-1 text-sm text-slate-300">{supporter}</span>)}</div>
+      </Card>
+      <Card as="section" class="p-6" aria-labelledby="updates-heading">
+        <h2 id="updates-heading" class="text-xl font-bold text-white">Campaign updates</h2>
+        <div class="mt-4 space-y-5">{campaign.updates.map((update) => <article class="border-l-2 border-blue-500 pl-4"><p class="text-xs uppercase tracking-wide text-blue-300">{update.date}</p><h3 class="mt-1 font-semibold text-white">{update.title}</h3><p class="mt-1 text-sm leading-6 text-slate-400">{update.body}</p></article>)}</div>
+      </Card>
     </div>
+
+    <Card as="section" class="p-6" aria-labelledby="developer-heading">
+      <div class="grid gap-6 md:grid-cols-[1fr_1fr]">
+        <div><p class="text-sm font-semibold uppercase tracking-[0.16em] text-blue-400">The team</p><h2 id="developer-heading" class="mt-1 text-2xl font-bold text-white">{campaign.developer.name}</h2><p class="mt-3 leading-7 text-slate-300">{campaign.developer.history}</p><p class="mt-3 text-sm text-slate-400">Based in {campaign.developer.location}</p></div>
+        <div class="space-y-2 text-sm"><a href={campaign.developer.website} data-testid="developer-website" class="block text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-blue-400">Studio website</a><a href={`https://social.example/${campaign.developer.social.slice(1)}`} data-testid="developer-social" class="block text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-blue-400">{campaign.developer.social}</a></div>
+      </div>
+    </Card>
+
+    <div class="grid gap-8 lg:grid-cols-2">
+      <Card as="section" class="p-6" aria-labelledby="discussion-heading"><h2 id="discussion-heading" class="text-xl font-bold text-white">Community discussion</h2><div class="mt-4 space-y-4">{campaign.discussion.map((post) => <article class="rounded-lg bg-slate-950/60 p-4"><p class="font-semibold text-blue-200">{post.author}</p><p class="mt-1 text-sm leading-6 text-slate-300">{post.message}</p></article>)}</div></Card>
+      <Card as="section" class="p-6" aria-labelledby="faq-heading"><h2 id="faq-heading" class="text-xl font-bold text-white">Frequently asked questions</h2><div class="mt-4 space-y-3">{campaign.faqs.map((faq, index) => <details class="rounded-lg border border-slate-700 p-4"><summary data-testid={`faq-question-${index}`} class="cursor-pointer font-semibold text-white focus:outline-none focus:ring-2 focus:ring-blue-400">{faq.question}</summary><p class="mt-3 text-sm leading-6 text-slate-400">{faq.answer}</p></details>)}</div></Card>
+    </div>
+
+    <Card as="section" class="p-6" aria-labelledby="pledge-heading" id="pledge">
+      <h2 id="pledge-heading" class="text-2xl font-bold text-white">Make a simulated pledge</h2>
+      <p class="mt-2 text-sm text-slate-400">This demo never collects payment details. Submit to preview the confirmation experience.</p>
+      <form id="pledge-form" class="mt-6 grid gap-4 md:grid-cols-2" action="/pledge/confirmation" method="get" novalidate data-testid="pledge-form">
+        <label class="text-sm text-slate-300">Name<input required name="name" data-testid="pledge-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
+        <label class="text-sm text-slate-300">Email<input required type="email" name="email" data-testid="pledge-email" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
+        <label class="text-sm text-slate-300">Reward tier<select required name="tier" data-testid="pledge-tier" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">{campaign.tiers.map((tier) => <option value={tier.name}>{tier.name} — ${tier.price}</option>)}</select></label>
+        <div class="flex items-end"><Button type="submit" variant="gradient" fullWidth data-testid="pledge-submit">Confirm simulated pledge</Button></div>
+      </form>
+      <p id="pledge-error" class="mt-3 hidden text-sm text-rose-300" role="alert" data-testid="pledge-error"></p>
+    </Card>
+    <Card as="aside" class="border-amber-400/30 p-6" aria-labelledby="risk-heading"><h2 id="risk-heading" class="text-xl font-bold text-white">Risks & transparency</h2><p class="mt-3 leading-7 text-slate-400">{campaign.risks}</p></Card>
+    <Button href="/" size="sm"><ArrowLeft class="mr-2 h-5 w-5" aria-hidden="true" />Back to all games</Button>
   </div>
 </Layout>
+
+<script>
+  const form = document.getElementById('pledge-form');
+  const error = document.getElementById('pledge-error');
+  form?.addEventListener('submit', (event) => {
+    const email = form.querySelector<HTMLInputElement>('[name="email"]');
+    if (!email?.validity.valid) {
+      event.preventDefault();
+      if (error) { error.textContent = 'Enter a valid email address to continue.'; error.classList.remove('hidden'); }
+    }
+  });
+</script>
