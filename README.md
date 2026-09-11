@@ -29,8 +29,8 @@ The database is migrated and seeded automatically before `dev`/`build` (via the 
 Filtering is intentionally client-side because the application is fully prerendered:
 
 1. The build queries the database and renders all game cards.
-2. Category and publisher values are emitted as accessible controls and card metadata.
-3. Selecting a category or publisher hides non-matching cards and updates the live result count.
+2. Title, category, and publisher values are emitted as accessible controls and card metadata.
+3. Typing a title search, or selecting a category or publisher, hides non-matching cards and updates the live result count.
 4. The **Clear filters** control restores the complete catalog.
 
 ## Using this template
