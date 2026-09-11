@@ -15,7 +15,7 @@ The database is migrated and seeded automatically before `dev`/`build` (via the 
 ## Implemented features
 
 - **Game catalog** — Displays the seeded collection of developer-themed games as responsive cards with titles, descriptions, category and publisher tags, star ratings, and links to detailed game pages.
-- **Game details** — Provides a dedicated static page for each game, including its description, publisher, category, rating, and support action. Unknown game IDs use the branded 404 page.
+- **Game details** — Provides a dedicated static page for each game, including its description, publisher and category names with descriptions, rating, and support action. Unknown game IDs use the branded 404 page.
 - **Category and publisher filtering** — The home page provides accessible category checkboxes and a publisher dropdown. Multiple categories use OR matching; a selected publisher combines with categories using AND matching.
 - **Filter state and feedback** — Users can clear all selections, see the current result count, and receive an empty-results message when no game matches.
 - **Static-site interaction** — All games and filter options are rendered at build time. A small browser script filters the existing cards without a runtime API or client-side framework.
