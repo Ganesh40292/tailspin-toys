@@ -1,12 +1,13 @@
 ---
-import Header from "../components/Header.astro"
-import "../styles/global.css"
+import Header from '../components/Header.astro';
+import '../styles/global.css';
 
 interface Props {
+  /** Document title rendered in the browser tab. */
   title?: string;
 }
 
-const { title = "Tailspin Toys" } = Astro.props;
+const { title = 'Tailspin Toys' } = Astro.props;
 ---
 
 <!doctype html>
@@ -16,34 +17,60 @@ const { title = "Tailspin Toys" } = Astro.props;
         <meta name="viewport" content="width=device-width" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
+        <meta name="description" content="Tailspin Toys is a static crowdfunding catalog for developer-themed games." />
+        <link rel="alternate" type="application/rss+xml" title="Tailspin Toys campaigns" href="/rss.xml" />
+        <link rel="sitemap" href="/sitemap.xml" />
         <title>{title}</title>
-        <!-- Preconnect to improve font loading -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </head>
-    <body class="min-h-screen bg-slate-900 text-white transition-colors duration-300 m-0 w-full h-full font-sans">
+    <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
         <Header />
-        <main class="container mx-auto py-6 h-full max-w-7xl">
-            <div class="px-4 sm:px-6 lg:px-8">
+        <main id="main-content" tabindex="-1" class="relative isolate overflow-hidden">
+            <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.16),_transparent_62%)]"></div>
+            <div class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
                 <slot />
             </div>
         </main>
+        <footer class="border-t border-slate-800/80 bg-slate-950/80">
+            <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+                <p>Built for bold ideas and better game nights.</p>
+                <a href="/about" data-testid="footer-about-link" class="font-medium text-slate-400 transition-colors hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-950">About Tailspin Toys</a>
+            </div>
+        </footer>
     </body>
 </html>
 
 <style is:global>
     :root {
-        --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    
+
     html {
         font-family: var(--font-sans);
         scroll-behavior: smooth;
+        background: #020617;
     }
-    
-    body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+
+    ::selection {
+        background: rgb(37 99 235 / 0.45);
+        color: #f8fafc;
+    }
+
+    .skip-link {
+        position: fixed;
+        left: 1rem;
+        top: 1rem;
+        z-index: 100;
+        transform: translateY(-200%);
+        border-radius: 0.5rem;
+        background: #2563eb;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        font-weight: 700;
+        transition: transform 150ms ease;
+    }
+
+    .skip-link:focus {
+        transform: translateY(0);
     }
 </style>

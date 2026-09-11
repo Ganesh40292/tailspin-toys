@@ -2,58 +2,98 @@
 import Menu from '../assets/icons/menu.svg';
 ---
 
-<header class="bg-blue-500 dark:bg-blue-700 text-white p-4 shadow-md transition-colors duration-300">
-  <div class="container mx-auto flex justify-between items-center pl-4 pr-4">
-    <div class="flex items-center">
+<header class="sticky top-0 z-40 border-b border-blue-400/15 bg-slate-950/85 text-white shadow-lg shadow-slate-950/20 backdrop-blur-xl">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <div class="flex items-center gap-3">
       <div class="relative group">
-        <button id="menu-toggle" class="focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-blue-500 rounded mr-4" aria-label="Toggle menu" aria-expanded="false" aria-controls="menu">
+        <button type="button" id="menu-toggle" data-testid="menu-toggle" class="min-h-11 min-w-11 rounded-lg border border-slate-700 bg-slate-900/80 p-2 text-slate-300 transition-all hover:border-blue-400/60 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-950" aria-label="Toggle menu (closed)" aria-expanded="false" aria-controls="menu">
           <Menu class="h-6 w-6" aria-hidden="true" />
         </button>
-        <nav id="menu" aria-label="Main" class="hidden absolute left-0 mt-2 w-48 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded shadow-lg z-10 transition-colors duration-300">
-          <ul class="py-1">
-            <li><a href="/" class="block px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">Home</a></li>
-            <li><a href="/about" class="block px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700">About</a></li>
+        <nav id="menu" aria-label="Main navigation" class="absolute left-0 mt-3 hidden w-52 rounded-xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl shadow-slate-950/50">
+          <ul class="p-2">
+            <li><a href="/" data-testid="nav-home" class="block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-slate-800 hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400">Home</a></li>
+            <li><a href="/about" data-testid="nav-about" class="block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-slate-800 hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400">About</a></li>
           </ul>
         </nav>
       </div>
-      <div class="text-xl font-bold"><a href="/" class="hover:underline">Tailspin Toys</a></div>
+      <div>
+        <a href="/" data-testid="brand-link" class="text-lg font-bold tracking-tight text-white transition-colors hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-950 sm:text-xl">Tailspin Toys</a>
+        <p class="hidden text-xs text-slate-400 sm:block">Crowdfunding better game nights</p>
+      </div>
     </div>
   </div>
 </header>
 
 <script>
-  // Toggle menu visibility when hamburger is clicked
-  const menuToggle = document.getElementById('menu-toggle');
-  const menu = document.getElementById('menu');
-  
-  if (menuToggle && menu) {
-    menuToggle.addEventListener('click', () => {
-      menu.classList.toggle('hidden');
+  const initialiseMenu = (): void => {
+    const menuToggle = document.getElementById('menu-toggle');
+    const menu = document.getElementById('menu');
+
+    if (!menuToggle || !menu || menuToggle.dataset.initialised === 'true') return;
+    menuToggle.dataset.initialised = 'true';
+
+    const closeMenu = (restoreFocus = true): void => {
+      menu.classList.add('hidden');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.setAttribute('aria-label', 'Toggle menu (closed)');
+      if (restoreFocus) menuToggle.focus();
+    };
+
+    const openMenu = (): void => {
+      menu.classList.remove('hidden');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      menuToggle.setAttribute('aria-label', 'Toggle menu (open)');
+      const firstLink = menu.querySelector<HTMLAnchorElement>('a');
+      if (firstLink) firstLink.focus();
+    };
+
+    const toggleMenu = (): void => {
       const isExpanded = !menu.classList.contains('hidden');
-      menuToggle.setAttribute('aria-expanded', String(isExpanded));
       if (isExpanded) {
-        const firstLink = menu.querySelector('a');
-        if (firstLink) firstLink.focus();
+        closeMenu();
+        return;
       }
-    });
-    
+      openMenu();
+    };
+
+    menuToggle.addEventListener('click', toggleMenu);
+
     // Close menu when clicking outside
     document.addEventListener('click', (event) => {
       const target = event.target;
       const isClickInside = target instanceof Node && (menuToggle.contains(target) || menu.contains(target));
       if (!isClickInside && !menu.classList.contains('hidden')) {
-        menu.classList.add('hidden');
-        menuToggle.setAttribute('aria-expanded', 'false');
+        closeMenu(false);
       }
     });
 
     // Close menu with Escape key and return focus to toggle button
     document.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' && !menu.classList.contains('hidden')) {
-        menu.classList.add('hidden');
-        menuToggle.setAttribute('aria-expanded', 'false');
-        menuToggle.focus();
+        closeMenu();
       }
     });
+
+    menu.addEventListener('keydown', (event) => {
+      if (event.key !== 'Tab') return;
+      const links = Array.from(menu.querySelectorAll<HTMLAnchorElement>('a'));
+      if (links.length === 0) return;
+      const first = links[0];
+      const last = links[links.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
+
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialiseMenu, { once: true });
+  } else {
+    initialiseMenu();
   }
 </script>

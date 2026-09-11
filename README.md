@@ -18,8 +18,11 @@ The app includes:
 - a home page with a game catalog
 - filtering by title, category, and publisher
 - a game details view for each title
+- static crowdfunding campaign details with reward tiers, updates, FAQs, and a simulated pledge confirmation
 - a branded 404 page for missing entries
 - accessible navigation and semantic HTML structure
+- skip navigation, reduced-motion support, keyboard-trapped navigation, and live filter announcements
+- RSS, sitemap, and robots metadata for static publishing
 - deterministic rating generation from title data
 
 ## Why this project exists
@@ -81,7 +84,6 @@ The app stores the following core entities:
   - publisher ID
   - category ID
   - star rating
-  - support/pledge data
 - Publishers
   - name
   - description
@@ -150,9 +152,10 @@ Users can filter the catalog using:
 - free-text title search
 - category selection
 - publisher selection
+- title and rating sorting
 - clearing all selections back to the complete list
 
-Filtering logic is applied in the browser over the content already rendered at build time, which keeps the static-site architecture intact.
+Filtering logic is applied in the browser over the content already rendered at build time, which keeps the static-site architecture intact. Search and filter state is synchronized to the URL, so a filtered catalog can be bookmarked or shared. Active selections are shown as removable chips, and an empty result state provides a direct reset action.
 
 ### Game detail pages
 
@@ -162,7 +165,10 @@ Every game gets a static URL under `/game/:id` via Astro dynamic routes. The det
 - publisher information
 - category context
 - star rating
-- support action
+- campaign funding progress, stretch goals, and recent supporter activity
+- Supporter, Collector, and Founder reward tiers
+- developer profile, updates, community discussion, FAQ, and risk transparency
+- a client-validated simulated pledge form (no payment integration) and confirmation route
 - navigation back to the home page
 
 ### 404 experience
@@ -179,6 +185,12 @@ The project emphasizes accessible patterns:
 - ARIA labels where needed
 - contrast-aware dark theme styling
 - browser automation checks for accessibility violations
+- keyboard and touch-friendly controls use a 44px minimum target
+- CI runs axe regression tests and a Lighthouse performance budget
+
+### Static publishing and performance
+
+The static build emits `/rss.xml`, `/sitemap.xml`, and `/robots.txt`. The catalog has no campaign image assets today, so there are no meaningful responsive WebP/AVIF conversions to perform; when artwork is added, use Astro image components with responsive `srcset` and modern formats. The site avoids third-party font requests and ships only small, scoped scripts.
 
 ### Deterministic ratings
 

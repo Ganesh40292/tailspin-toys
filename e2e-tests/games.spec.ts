@@ -98,6 +98,30 @@ test.describe('Game Listing and Navigation', () => {
     });
   });
 
+  test('should sort games by highest rating', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByLabel('Sort by').selectOption('rating-desc');
+
+    const visibleCards = page.locator('[data-testid="game-card"]:visible');
+    const ratings = await visibleCards.evaluateAll((cards) =>
+      cards.map((card) => Number(card.getAttribute('data-game-rating') ?? 0)),
+    );
+    expect(ratings).toEqual([...ratings].sort((a, b) => b - a));
+    await expect(page).toHaveURL(/sort=rating-desc/);
+  });
+
+  test('should restore catalog state from shared URL filters', async ({ page }) => {
+    await page.goto('/?q=DOMINION&category=1&publisher=1&sort=rating-desc');
+
+    await expect(page.getByRole('searchbox', { name: 'Search games by title' })).toHaveValue('DOMINION');
+    await expect(page.getByLabel('Filter by publisher')).toHaveValue('1');
+    await expect(page.getByLabel('Sort by')).toHaveValue('rating-desc');
+    await expect(page.locator('[data-testid="game-card"]:visible').getByTestId('game-title')).toHaveText(
+      'DevOps Dominion',
+    );
+  });
+
   test('should clear active game filters', async ({ page }) => {
     await page.goto('/');
     const visibleGameCards = page.locator('[data-testid="game-card"]:visible');
@@ -197,6 +221,21 @@ test.describe('Game Listing and Navigation', () => {
       await expect(backButton).toContainText('Support This Game');
       await expect(backButton).toBeEnabled();
     });
+
+  });
+
+  test('should support a validated simulated pledge flow', async ({ page }) => {
+    await page.goto('/game/1');
+    await expect(page.getByRole('heading', { name: 'Pledge tiers' })).toBeVisible();
+    await expect(page.getByTestId('pledge-tier-founder')).toContainText('Founder');
+    await page.getByTestId('pledge-submit').click();
+    await expect(page.getByTestId('pledge-error')).toContainText('valid email');
+    await page.getByTestId('pledge-name').fill('Taylor Tester');
+    await page.getByTestId('pledge-email').fill('taylor@example.com');
+    await page.getByTestId('pledge-tier').selectOption('Founder');
+    await page.getByTestId('pledge-submit').click();
+    await expect(page).toHaveURL(/\/pledge\/confirmation\?name=Taylor\+Tester&email=taylor%40example.com&tier=Founder/);
+    await expect(page.getByTestId('confirmation-heading')).toContainText('Thanks for backing');
   });
 
   test('should be able to navigate back to home from game details', async ({ page }) => {

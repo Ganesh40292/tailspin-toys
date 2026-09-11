@@ -26,14 +26,20 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
 ---
 
 <Layout title="Tailspin Toys - Crowdfunding your new favorite game!">
-  <div class="py-8">
+  <div>
     <PageHero
       title="Welcome to Tailspin Toys"
       subtitle="Find your next game! And maybe even back one! Explore our collection!"
     />
 
     <div>
-      <h2 class="text-2xl font-medium mb-6 text-slate-100">Featured Games</h2>
+      <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">The collection</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight text-white">Featured games</h2>
+        </div>
+        <p class="text-sm text-slate-400">Find a table worth gathering around.</p>
+      </div>
 
       {games.length === 0 ? (
         <EmptyState text="No games available at the moment." />
@@ -41,11 +47,11 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
         <>
           <form
             id="game-filters"
-            class="mb-8 rounded-xl border border-slate-700 bg-slate-800/60 p-6"
+            class="mb-10 rounded-2xl border border-slate-800 bg-slate-900/75 p-5 shadow-xl shadow-slate-950/20 backdrop-blur-sm sm:p-6"
             data-testid="game-filters"
           >
             <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div class="flex flex-col gap-2">
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
                 <label for="title-search" class="text-sm font-semibold uppercase tracking-wide text-slate-300">
                   Search games by title
                 </label>
@@ -54,7 +60,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                   name="title"
                   type="search"
                   placeholder="Search by title"
-                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-600 transition-colors focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                   data-testid="title-search"
                 />
               </div>
@@ -65,7 +71,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                 </legend>
                 <div class="flex flex-wrap gap-3">
                   {categories.map(([id, name]) => (
-                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-3 py-2 text-slate-200 transition-colors hover:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500">
+                    <label class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-blue-400/60 hover:text-white focus-within:ring-2 focus-within:ring-blue-400/50">
                       <input
                         type="checkbox"
                         name="category"
@@ -87,7 +93,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                 <select
                   id="publisher-filter"
                   name="publisher"
-                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 transition-colors focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                   data-testid="publisher-filter"
                 >
                   <option value="">All publishers</option>
@@ -95,25 +101,56 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                 </select>
               </div>
 
+              <div class="flex flex-col gap-2">
+                <label for="sort-games" class="text-sm font-semibold uppercase tracking-wide text-slate-300">
+                  Sort by
+                </label>
+                <select
+                  id="sort-games"
+                  name="sort"
+                  class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 transition-colors focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
+                  data-testid="sort-games"
+                >
+                  <option value="title-asc">Title, A-Z</option>
+                  <option value="rating-desc">Highest rated</option>
+                  <option value="rating-asc">Lowest rated</option>
+                  <option value="title-desc">Title, Z-A</option>
+                </select>
+              </div>
+
               <button
                 type="button"
-                class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                class="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 data-testid="clear-filters"
               >
                 Clear filters
               </button>
             </div>
-            <p class="mt-4 text-sm text-slate-400" role="status" aria-live="polite" data-testid="filter-status">
-              Showing {games.length} {games.length === 1 ? 'game' : 'games'}
-            </p>
+            <div class="mt-5 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p class="text-sm text-slate-400" role="status" aria-live="polite" aria-atomic="true" data-testid="filter-status">
+                Showing {games.length} {games.length === 1 ? 'game' : 'games'}
+              </p>
+              <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="filter-announcement"></p>
+              <p class="text-xs text-slate-400">Filters are saved in the URL so you can share this view.</p>
+            </div>
           </form>
+
+          <div class="mb-5 flex min-h-7 flex-wrap items-center gap-2" data-testid="active-filters"></div>
 
           <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3" data-testid="games-grid">
             {games.map((game) => <GameCard game={game} />)}
           </div>
-          <p class="hidden py-8 text-center text-slate-400" data-testid="filtered-empty" role="status">
-            No games match your search or filters.
-          </p>
+          <div class="hidden rounded-2xl border border-slate-800 bg-slate-900/70 px-6 py-14 text-center shadow-lg shadow-slate-950/20" data-testid="filtered-empty-panel">
+            <p class="text-lg font-semibold text-white" data-testid="filtered-empty" role="status">No games match your search or filters.</p>
+            <p class="mt-2 text-sm text-slate-400">Try a broader search or remove one of the active filters.</p>
+            <button
+              type="button"
+              class="mt-6 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition-colors hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-950"
+              data-testid="empty-clear-filters"
+            >
+              Reset filters
+            </button>
+          </div>
         </>
       )}
     </div>
@@ -124,24 +161,108 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
   const filterForm = document.querySelector<HTMLFormElement>('[data-testid="game-filters"]');
   const gamesGrid = document.querySelector<HTMLElement>('[data-testid="games-grid"]');
   const filterStatus = document.querySelector<HTMLElement>('[data-testid="filter-status"]');
-  const filteredEmpty = document.querySelector<HTMLElement>('[data-testid="filtered-empty"]');
+  const filteredEmpty = document.querySelector<HTMLElement>('[data-testid="filtered-empty-panel"]');
   const clearFilters = document.querySelector<HTMLButtonElement>('[data-testid="clear-filters"]');
+  const emptyClearFilters = document.querySelector<HTMLButtonElement>('[data-testid="empty-clear-filters"]');
+  const activeFilters = document.querySelector<HTMLElement>('[data-testid="active-filters"]');
 
-  if (filterForm && gamesGrid && filterStatus && filteredEmpty && clearFilters) {
+  if (filterForm && gamesGrid && filterStatus && filteredEmpty && clearFilters && emptyClearFilters && activeFilters) {
     const gameCards = Array.from(gamesGrid.querySelectorAll<HTMLElement>('[data-testid="game-card"]'));
     const categoryFilters = Array.from(
       filterForm.querySelectorAll<HTMLInputElement>('input[name="category"]'),
     );
     const titleSearch = filterForm.querySelector<HTMLInputElement>('input[name="title"]');
     const publisherFilter = filterForm.querySelector<HTMLSelectElement>('select[name="publisher"]');
+    const sortGames = filterForm.querySelector<HTMLSelectElement>('select[name="sort"]');
+    const params = new URLSearchParams(window.location.search);
 
-    const applyFilters = (): void => {
+    const updateUrl = (): void => {
+      const nextParams = new URLSearchParams();
+      const searchQuery = titleSearch?.value.trim() ?? '';
+      if (searchQuery) nextParams.set('q', searchQuery);
+      categoryFilters.filter((filter) => filter.checked).forEach((filter) => nextParams.append('category', filter.value));
+      if (publisherFilter?.value) nextParams.set('publisher', publisherFilter.value);
+      if (sortGames?.value && sortGames.value !== 'title-asc') nextParams.set('sort', sortGames.value);
+      const query = nextParams.toString();
+      window.history.replaceState({}, '', query ? `/?${query}` : '/');
+    };
+
+    const resetFilters = (): void => {
+      filterForm.reset();
+      if (sortGames) sortGames.value = 'title-asc';
+      applyFilters();
+    };
+
+    const escapeHtml = (value: string): string =>
+      value.replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;',
+      })[character] ?? character);
+
+    const renderActiveFilters = (): void => {
+      const chips: string[] = [];
+      const searchQuery = titleSearch?.value.trim() ?? '';
+      if (searchQuery) {
+        chips.push(`<button type="button" aria-label="Remove search filter ${escapeHtml(searchQuery)}" data-clear-filter="search" class="min-h-11 rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200 transition-colors hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-400">Search: ${escapeHtml(searchQuery)} <span aria-hidden="true">×</span></button>`);
+      }
+      categoryFilters.filter((filter) => filter.checked).forEach((filter) => {
+        const label = filter.closest('label')?.querySelector('span')?.textContent?.trim() ?? filter.value;
+        chips.push(`<button type="button" aria-label="Remove category filter ${escapeHtml(label)}" data-clear-category="${escapeHtml(filter.value)}" class="min-h-11 rounded-full border border-purple-400/25 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-200 transition-colors hover:bg-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-400">${escapeHtml(label)} <span aria-hidden="true">×</span></button>`);
+      });
+      if (publisherFilter?.value) {
+        const publisherName = publisherFilter.options[publisherFilter.selectedIndex]?.text ?? publisherFilter.value;
+        chips.push(`<button type="button" aria-label="Remove publisher filter ${escapeHtml(publisherName)}" data-clear-filter="publisher" class="min-h-11 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400">${escapeHtml(publisherName)} <span aria-hidden="true">×</span></button>`);
+      }
+      activeFilters.setAttribute('aria-label', chips.length > 0 ? 'Active filters' : '');
+      activeFilters.innerHTML = chips.length > 0
+        ? `<span class="mr-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Active</span>${chips.join('')}`
+        : '';
+
+      activeFilters.querySelectorAll<HTMLButtonElement>('[data-clear-filter="search"]').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (titleSearch) titleSearch.value = '';
+          applyFilters();
+        });
+      });
+      activeFilters.querySelectorAll<HTMLButtonElement>('[data-clear-filter="publisher"]').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (publisherFilter) publisherFilter.value = '';
+          applyFilters();
+        });
+      });
+      activeFilters.querySelectorAll<HTMLButtonElement>('[data-clear-category]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const filter = categoryFilters.find((candidate) => candidate.value === button.dataset.clearCategory);
+          if (filter) filter.checked = false;
+          applyFilters();
+        });
+      });
+    };
+
+    const applyFilters = (syncUrl = true): void => {
       const selectedCategories = new Set(
         categoryFilters.filter((filter) => filter.checked).map((filter) => filter.value),
       );
       const searchQuery = titleSearch?.value.trim().toLowerCase() ?? '';
       const selectedPublisher = publisherFilter?.value ?? '';
+      const sortValue = sortGames?.value ?? 'title-asc';
       let visibleGames = 0;
+
+      const sortedCards = [...gameCards].sort((first, second) => {
+        const firstTitle = first.dataset.gameTitle ?? '';
+        const secondTitle = second.dataset.gameTitle ?? '';
+        const firstRating = Number(first.dataset.gameRating ?? 0);
+        const secondRating = Number(second.dataset.gameRating ?? 0);
+        if (sortValue === 'rating-desc') return secondRating - firstRating || firstTitle.localeCompare(secondTitle);
+        if (sortValue === 'rating-asc') return firstRating - secondRating || firstTitle.localeCompare(secondTitle);
+        return sortValue === 'title-desc'
+          ? secondTitle.localeCompare(firstTitle)
+          : firstTitle.localeCompare(secondTitle);
+      });
+      sortedCards.forEach((card) => gamesGrid.append(card));
 
       gameCards.forEach((card) => {
         const titleMatches =
@@ -161,14 +282,29 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
       });
 
       filterStatus.textContent = `Showing ${visibleGames} ${visibleGames === 1 ? 'game' : 'games'}`;
+      const filterAnnouncement = document.querySelector<HTMLElement>('[data-testid="filter-announcement"]');
+      if (filterAnnouncement) {
+        filterAnnouncement.textContent = searchQuery
+          ? `${visibleGames} ${visibleGames === 1 ? 'game' : 'games'} match “${titleSearch?.value.trim()}”.`
+          : `${visibleGames} ${visibleGames === 1 ? 'game' : 'games'} shown.`;
+      }
       filteredEmpty.classList.toggle('hidden', visibleGames !== 0);
+      renderActiveFilters();
+      if (syncUrl) updateUrl();
     };
 
-    filterForm.addEventListener('change', applyFilters);
-    titleSearch?.addEventListener('input', applyFilters);
-    clearFilters.addEventListener('click', () => {
-      filterForm.reset();
-      applyFilters();
+    if (titleSearch) titleSearch.value = params.get('q') ?? '';
+    const selectedCategories = new Set(params.getAll('category'));
+    categoryFilters.forEach((filter) => {
+      filter.checked = selectedCategories.has(filter.value);
     });
+    if (publisherFilter) publisherFilter.value = params.get('publisher') ?? '';
+    if (sortGames) sortGames.value = params.get('sort') ?? 'title-asc';
+
+    filterForm.addEventListener('change', () => applyFilters());
+    titleSearch?.addEventListener('input', () => applyFilters());
+    clearFilters.addEventListener('click', resetFilters);
+    emptyClearFilters.addEventListener('click', resetFilters);
+    applyFilters(false);
   }
 </script>

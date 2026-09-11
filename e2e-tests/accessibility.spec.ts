@@ -75,6 +75,33 @@ test.describe('Accessibility Tests', () => {
     });
   });
 
+  test('keyboard navigation - mobile menu traps focus and restores it', async ({ page }) => {
+    await page.goto('/');
+    const menuButton = page.getByRole('button', { name: /toggle menu/i });
+    await menuButton.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('link', { name: 'Home', exact: true })).toBeFocused();
+
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.getByRole('link', { name: 'About', exact: true })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name: 'Home', exact: true })).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(menuButton).toBeFocused();
+    await expect(menuButton).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('pledge validation associates the error with the email field', async ({ page }) => {
+    await page.goto('/game/1');
+    const email = page.getByTestId('pledge-email');
+    await email.fill('not-an-email');
+    await page.getByTestId('pledge-submit').click();
+    await expect(email).toHaveAttribute('aria-invalid', 'true');
+    await expect(page.getByTestId('pledge-error')).toContainText('valid email');
+    await expect(email).toBeFocused();
+  });
+
   test('keyboard navigation - should be able to navigate to game cards', async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="games-grid"]', { timeout: 10000 });
@@ -186,6 +213,14 @@ test.describe('Accessibility Tests', () => {
     );
     
     expect(contrastViolations).toEqual([]);
+  });
+
+  test('high contrast mode keeps primary controls usable', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/');
+    await expect(page.getByRole('main')).toBeVisible();
+    await expect(page.getByRole('button', { name: /toggle menu/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Welcome to Tailspin Toys' })).toBeVisible();
   });
 
   test('semantic HTML - main landmarks should be present', async ({ page }) => {

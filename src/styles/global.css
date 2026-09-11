@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Keep native controls comfortable for touch and keyboard users. */
+button,
+select,
+input[type='checkbox'],
+input[type='radio'],
+a {
+  min-height: 2.75rem;
+}
