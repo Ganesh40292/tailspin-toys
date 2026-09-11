@@ -137,3 +137,33 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+  # Run a repeatable Lighthouse smoke check against the production build.
+  performance-budget:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build static site
+        run: npm run build
+      - name: Start preview server
+        run: npm run preview -- --host 0.0.0.0 > preview.log 2>&1 &
+      - name: Wait for preview server
+        run: npx --yes wait-on http://127.0.0.1:4321/
+      - name: Run Lighthouse performance budget
+        run: npx --yes lighthouse http://127.0.0.1:4321/ --budget-path=./lighthouse-budget.json --chrome-flags="--headless --no-sandbox" --only-categories=performance,accessibility --output=json --output-path=./lighthouse-report.json
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json

@@ -127,9 +127,10 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
               </button>
             </div>
             <div class="mt-5 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <p class="text-sm text-slate-400" role="status" aria-live="polite" data-testid="filter-status">
+              <p class="text-sm text-slate-400" role="status" aria-live="polite" aria-atomic="true" data-testid="filter-status">
                 Showing {games.length} {games.length === 1 ? 'game' : 'games'}
               </p>
+              <p class="sr-only" role="status" aria-live="polite" aria-atomic="true" data-testid="filter-announcement"></p>
               <p class="text-xs text-slate-400">Filters are saved in the URL so you can share this view.</p>
             </div>
           </form>
@@ -205,16 +206,17 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
       const chips: string[] = [];
       const searchQuery = titleSearch?.value.trim() ?? '';
       if (searchQuery) {
-        chips.push(`<button type="button" data-clear-filter="search" class="rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200 transition-colors hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-400">Search: ${escapeHtml(searchQuery)} <span aria-hidden="true">×</span></button>`);
+        chips.push(`<button type="button" aria-label="Remove search filter ${escapeHtml(searchQuery)}" data-clear-filter="search" class="min-h-11 rounded-full border border-blue-400/25 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-200 transition-colors hover:bg-blue-500/20 focus:outline-none focus:ring-2 focus:ring-blue-400">Search: ${escapeHtml(searchQuery)} <span aria-hidden="true">×</span></button>`);
       }
       categoryFilters.filter((filter) => filter.checked).forEach((filter) => {
         const label = filter.closest('label')?.querySelector('span')?.textContent?.trim() ?? filter.value;
-        chips.push(`<button type="button" data-clear-category="${escapeHtml(filter.value)}" class="rounded-full border border-purple-400/25 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-200 transition-colors hover:bg-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-400">${escapeHtml(label)} <span aria-hidden="true">×</span></button>`);
+        chips.push(`<button type="button" aria-label="Remove category filter ${escapeHtml(label)}" data-clear-category="${escapeHtml(filter.value)}" class="min-h-11 rounded-full border border-purple-400/25 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-200 transition-colors hover:bg-purple-500/20 focus:outline-none focus:ring-2 focus:ring-purple-400">${escapeHtml(label)} <span aria-hidden="true">×</span></button>`);
       });
       if (publisherFilter?.value) {
         const publisherName = publisherFilter.options[publisherFilter.selectedIndex]?.text ?? publisherFilter.value;
-        chips.push(`<button type="button" data-clear-filter="publisher" class="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400">${escapeHtml(publisherName)} <span aria-hidden="true">×</span></button>`);
+        chips.push(`<button type="button" aria-label="Remove publisher filter ${escapeHtml(publisherName)}" data-clear-filter="publisher" class="min-h-11 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200 transition-colors hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400">${escapeHtml(publisherName)} <span aria-hidden="true">×</span></button>`);
       }
+      activeFilters.setAttribute('aria-label', chips.length > 0 ? 'Active filters' : '');
       activeFilters.innerHTML = chips.length > 0
         ? `<span class="mr-1 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Active</span>${chips.join('')}`
         : '';
@@ -280,6 +282,12 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
       });
 
       filterStatus.textContent = `Showing ${visibleGames} ${visibleGames === 1 ? 'game' : 'games'}`;
+      const filterAnnouncement = document.querySelector<HTMLElement>('[data-testid="filter-announcement"]');
+      if (filterAnnouncement) {
+        filterAnnouncement.textContent = searchQuery
+          ? `${visibleGames} ${visibleGames === 1 ? 'game' : 'games'} match “${titleSearch?.value.trim()}”.`
+          : `${visibleGames} ${visibleGames === 1 ? 'game' : 'games'} shown.`;
+      }
       filteredEmpty.classList.toggle('hidden', visibleGames !== 0);
       renderActiveFilters();
       if (syncUrl) updateUrl();

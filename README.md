@@ -21,6 +21,8 @@ The app includes:
 - static crowdfunding campaign details with reward tiers, updates, FAQs, and a simulated pledge confirmation
 - a branded 404 page for missing entries
 - accessible navigation and semantic HTML structure
+- skip navigation, reduced-motion support, keyboard-trapped navigation, and live filter announcements
+- RSS, sitemap, and robots metadata for static publishing
 - deterministic rating generation from title data
 
 ## Why this project exists
@@ -183,6 +185,12 @@ The project emphasizes accessible patterns:
 - ARIA labels where needed
 - contrast-aware dark theme styling
 - browser automation checks for accessibility violations
+- keyboard and touch-friendly controls use a 44px minimum target
+- CI runs axe regression tests and a Lighthouse performance budget
+
+### Static publishing and performance
+
+The static build emits `/rss.xml`, `/sitemap.xml`, and `/robots.txt`. The catalog has no campaign image assets today, so there are no meaningful responsive WebP/AVIF conversions to perform; when artwork is added, use Astro image components with responsive `srcset` and modern formats. The site avoids third-party font requests and ships only small, scoped scripts.
 
 ### Deterministic ratings
 

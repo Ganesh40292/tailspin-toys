@@ -44,7 +44,7 @@ const progress = Math.min(100, Math.round((campaign.raised / campaign.goal) * 10
         <div class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
           <div>
             <p class="leading-7 text-slate-300" data-testid="game-details-description">{game.description}</p>
-            <div class="mt-6 h-3 overflow-hidden rounded-full bg-slate-800" aria-label={`${progress}% funded`} role="progressbar" aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
+            <div class="mt-6 h-3 overflow-hidden rounded-full bg-slate-800" role="progressbar" aria-label={`Campaign funding progress: ${progress}%`} aria-valuenow={progress} aria-valuemin="0" aria-valuemax="100">
               <div class="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500" style={`width: ${progress}%`}></div>
             </div>
             <div class="mt-3 flex justify-between text-sm text-slate-400">
@@ -105,12 +105,12 @@ const progress = Math.min(100, Math.round((campaign.raised / campaign.goal) * 10
       <h2 id="pledge-heading" class="text-2xl font-bold text-white">Make a simulated pledge</h2>
       <p class="mt-2 text-sm text-slate-400">This demo never collects payment details. Submit to preview the confirmation experience.</p>
       <form id="pledge-form" class="mt-6 grid gap-4 md:grid-cols-2" action="/pledge/confirmation" method="get" novalidate data-testid="pledge-form">
-        <label class="text-sm text-slate-300">Name<input required name="name" data-testid="pledge-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
-        <label class="text-sm text-slate-300">Email<input required type="email" name="email" data-testid="pledge-email" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
-        <label class="text-sm text-slate-300">Reward tier<select required name="tier" data-testid="pledge-tier" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">{campaign.tiers.map((tier) => <option value={tier.name}>{tier.name} — ${tier.price}</option>)}</select></label>
+        <label for="pledge-name" class="text-sm text-slate-300">Name<input id="pledge-name" required name="name" aria-describedby="pledge-error" data-testid="pledge-name" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
+        <label for="pledge-email" class="text-sm text-slate-300">Email<input id="pledge-email" required type="email" name="email" aria-describedby="pledge-error" data-testid="pledge-email" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400" /></label>
+        <label for="pledge-tier" class="text-sm text-slate-300">Reward tier<select id="pledge-tier" required name="tier" data-testid="pledge-tier" class="mt-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-400">{campaign.tiers.map((tier) => <option value={tier.name}>{tier.name} — ${tier.price}</option>)}</select></label>
         <div class="flex items-end"><Button type="submit" variant="gradient" fullWidth data-testid="pledge-submit">Confirm simulated pledge</Button></div>
       </form>
-      <p id="pledge-error" class="mt-3 hidden text-sm text-rose-300" role="alert" data-testid="pledge-error"></p>
+      <p id="pledge-error" class="mt-3 hidden text-sm text-rose-300" role="alert" aria-live="assertive" data-testid="pledge-error"></p>
     </Card>
     <Card as="aside" class="border-amber-400/30 p-6" aria-labelledby="risk-heading"><h2 id="risk-heading" class="text-xl font-bold text-white">Risks & transparency</h2><p class="mt-3 leading-7 text-slate-400">{campaign.risks}</p></Card>
     <Button href="/" size="sm"><ArrowLeft class="mr-2 h-5 w-5" aria-hidden="true" />Back to all games</Button>
@@ -124,7 +124,12 @@ const progress = Math.min(100, Math.round((campaign.raised / campaign.goal) * 10
     const email = form.querySelector<HTMLInputElement>('[name="email"]');
     if (!email?.validity.valid) {
       event.preventDefault();
-      if (error) { error.textContent = 'Enter a valid email address to continue.'; error.classList.remove('hidden'); }
+      if (error && email) {
+        error.textContent = 'Enter a valid email address to continue.';
+        error.classList.remove('hidden');
+        email.setAttribute('aria-invalid', 'true');
+        email.focus();
+      }
     }
   });
 </script>

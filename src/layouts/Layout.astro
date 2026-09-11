@@ -17,15 +17,15 @@ const { title = 'Tailspin Toys' } = Astro.props;
         <meta name="viewport" content="width=device-width" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <meta name="generator" content={Astro.generator} />
+        <meta name="description" content="Tailspin Toys is a static crowdfunding catalog for developer-themed games." />
+        <link rel="alternate" type="application/rss+xml" title="Tailspin Toys campaigns" href="/rss.xml" />
+        <link rel="sitemap" href="/sitemap.xml" />
         <title>{title}</title>
-        <!-- Preconnect to improve font loading -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </head>
     <body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
+        <a href="#main-content" class="skip-link">Skip to main content</a>
         <Header />
-        <main class="relative isolate overflow-hidden">
+        <main id="main-content" tabindex="-1" class="relative isolate overflow-hidden">
             <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[32rem] bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.16),_transparent_62%)]"></div>
             <div class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
                 <slot />
@@ -42,7 +42,7 @@ const { title = 'Tailspin Toys' } = Astro.props;
 
 <style is:global>
     :root {
-        --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     html {
@@ -54,5 +54,23 @@ const { title = 'Tailspin Toys' } = Astro.props;
     ::selection {
         background: rgb(37 99 235 / 0.45);
         color: #f8fafc;
+    }
+
+    .skip-link {
+        position: fixed;
+        left: 1rem;
+        top: 1rem;
+        z-index: 100;
+        transform: translateY(-200%);
+        border-radius: 0.5rem;
+        background: #2563eb;
+        color: #fff;
+        padding: 0.75rem 1rem;
+        font-weight: 700;
+        transition: transform 150ms ease;
+    }
+
+    .skip-link:focus {
+        transform: translateY(0);
     }
 </style>
