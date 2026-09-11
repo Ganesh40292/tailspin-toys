@@ -26,14 +26,20 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
 ---
 
 <Layout title="Tailspin Toys - Crowdfunding your new favorite game!">
-  <div class="py-8">
+  <div>
     <PageHero
       title="Welcome to Tailspin Toys"
       subtitle="Find your next game! And maybe even back one! Explore our collection!"
     />
 
     <div>
-      <h2 class="text-2xl font-medium mb-6 text-slate-100">Featured Games</h2>
+      <div class="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-400">The collection</p>
+          <h2 class="mt-1 text-2xl font-bold tracking-tight text-white">Featured games</h2>
+        </div>
+        <p class="text-sm text-slate-400">Find a table worth gathering around.</p>
+      </div>
 
       {games.length === 0 ? (
         <EmptyState text="No games available at the moment." />
@@ -41,11 +47,11 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
         <>
           <form
             id="game-filters"
-            class="mb-8 rounded-xl border border-slate-700 bg-slate-800/60 p-6"
+            class="mb-10 rounded-2xl border border-slate-800 bg-slate-900/75 p-5 shadow-xl shadow-slate-950/20 backdrop-blur-sm sm:p-6"
             data-testid="game-filters"
           >
             <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div class="flex flex-col gap-2">
+              <div class="flex min-w-0 flex-1 flex-col gap-2">
                 <label for="title-search" class="text-sm font-semibold uppercase tracking-wide text-slate-300">
                   Search games by title
                 </label>
@@ -54,7 +60,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                   name="title"
                   type="search"
                   placeholder="Search by title"
-                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 placeholder:text-slate-600 transition-colors focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                   data-testid="title-search"
                 />
               </div>
@@ -65,7 +71,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                 </legend>
                 <div class="flex flex-wrap gap-3">
                   {categories.map(([id, name]) => (
-                    <label class="inline-flex items-center gap-2 rounded-lg border border-slate-600 px-3 py-2 text-slate-200 transition-colors hover:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500">
+                    <label class="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-blue-400/60 hover:text-white focus-within:ring-2 focus-within:ring-blue-400/50">
                       <input
                         type="checkbox"
                         name="category"
@@ -87,7 +93,7 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
                 <select
                   id="publisher-filter"
                   name="publisher"
-                  class="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  class="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-100 transition-colors focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/30"
                   data-testid="publisher-filter"
                 >
                   <option value="">All publishers</option>
@@ -97,13 +103,13 @@ const publishers = [...publisherOptions.entries()].sort((a, b) => a[1].localeCom
 
               <button
                 type="button"
-                class="rounded-lg border border-slate-600 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                class="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 transition-colors hover:border-slate-500 hover:bg-slate-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 data-testid="clear-filters"
               >
                 Clear filters
               </button>
             </div>
-            <p class="mt-4 text-sm text-slate-400" role="status" aria-live="polite" data-testid="filter-status">
+            <p class="mt-5 border-t border-slate-800 pt-4 text-sm text-slate-400" role="status" aria-live="polite" data-testid="filter-status">
               Showing {games.length} {games.length === 1 ? 'game' : 'games'}
             </p>
           </form>

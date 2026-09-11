@@ -1,16 +1,22 @@
 ---
 interface Props {
+    /** Primary heading for the page intro. */
     title: string;
+    /** Supporting copy shown beneath the heading. */
     subtitle?: string;
 }
 
 const { title, subtitle } = Astro.props;
 ---
 
-<div class="max-w-3xl mb-10" data-testid="page-hero">
-    <h1 class="text-4xl font-bold mb-4 text-slate-100" data-testid="page-hero-title">{title}</h1>
+<div class="relative mb-12 max-w-3xl" data-testid="page-hero">
+    <p class="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-blue-300">
+        <span class="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.9)]"></span>
+        Discover • Back • Play
+    </p>
+    <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl" data-testid="page-hero-title">{title}</h1>
     {subtitle && (
-        <p class="text-xl text-slate-300" data-testid="page-hero-subtitle">{subtitle}</p>
+        <p class="mt-5 max-w-2xl text-lg leading-8 text-slate-400 sm:text-xl" data-testid="page-hero-subtitle">{subtitle}</p>
     )}
     <slot />
 </div>
